@@ -642,7 +642,7 @@
 
       <div class="check-field">
         <input type="checkbox" id="outingBredouille">
-        <label for="outingBredouille">Bredouille (aucun poisson)</label>
+        <label for="outingBredouille">Bredouille</label>
       </div>
 
       <div class="field">
@@ -888,7 +888,7 @@ function renderOutingList(){
         </div>
       </div>
       <div class="outing-stats-row">
-        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">Au bord de l'eau</span></div>` : ""}
+        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">au bord de l'eau</span></div>` : ""}
         <div><span class="n">${total}</span><span class="l"> Poissons au total</span></div>
       </div>
       ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
