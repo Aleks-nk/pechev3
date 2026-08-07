@@ -554,11 +554,6 @@
         <button type="button" class="gps-clear" id="gpsClear" style="display:none;">Effacer la position</button>
       </div>
 
-      <div class="row2">
-        <div class="field">
-          <label>Poids (kg)</label>
-          <input id="poids" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
         <div class="field">
           <label>Taille (cm)</label>
           <input id="taille" type="number" step="0.5" min="0" placeholder="0">
@@ -761,7 +756,7 @@ function renderStats(){
     let biggest = null;
     const speciesCount = {};
     catches.forEach(c=>{
-      if(c.poids && (!biggest || parseFloat(c.poids) > parseFloat(biggest.poids))) biggest = c;
+      if(c.taille && (!biggest || parseFloat(c.taille) > parseFloat(biggest.taille))) biggest = c;
       const key = c.espece.trim().toLowerCase();
       speciesCount[key] = (speciesCount[key]||0)+1;
     });
