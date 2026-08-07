@@ -888,10 +888,10 @@ function renderOutingList(){
         </div>
       </div>
       <div class="outing-stats-row">
-        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)} h</span><span class="l">Au bord de l'eau</span></div>` : ""}
-        <div><span class="n">${total}</span><span class="l">Poissons au total</span></div>
+        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">Au bord de l'eau</span></div>` : ""}
+        <div><span class="n">${total}</span><span class="l"> Poissons au total</span></div>
       </div>
-      ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans Prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
+      ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
       ${o.notes ? `<div class="catch-notes">${escapeHtml(o.notes)}</div>` : ""}
       <div class="catch-actions">
         <button class="icon-btn" onclick="editOuting('${o.id}')">✏️ Modifier</button>
