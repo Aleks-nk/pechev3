@@ -356,6 +356,15 @@
   .check-field label{margin:0; text-transform:none; font-size:14px; color:var(--ink); font-weight:400;}
   .field-hint{font-size:11.5px; color:#8a938f; margin-top:4px;}
 
+  .technique-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .tech-check{
+    display:flex; align-items:center; gap:5px;
+    font-size:13.5px; font-weight:600; color:var(--brass-dark);
+    text-transform:none; white-space:nowrap; cursor:pointer;
+  }
+  .tech-check input{width:auto;}
+  .technique-row input[type="text"]{flex:1 1 140px; min-width:0;}
+
   .sheet-actions{display:flex; gap:10px; margin-top:6px;}
   .btn{
     flex:1;
@@ -476,11 +485,11 @@
 <div class="app">
   <header class="cover">
     <button class="hamburger-btn" id="menuBtn" aria-label="Options">☰</button>
-    <div class="cover-eyebrow"><span class="dot"></span> Aleks_nk_fishing <span class="dot"></div>
+    <div class="cover-eyebrow"><span class="dot"></span> Journal personnel</div>
     <h1 class="cover-title">Carnet de Pêche</h1>
     <div class="tabs">
-      <button class="tab-btn active" id="tabPrises" data-tab="prises">Fishdex</button>
-      <button class="tab-btn" id="tabSorties" data-tab="sorties">Sorties</button>
+      <button class="tab-btn active" id="tabPrises" data-tab="prises">🎣 Prises</button>
+      <button class="tab-btn" id="tabSorties" data-tab="sorties">🚣 Sorties</button>
     </div>
   </header>
 
@@ -497,7 +506,7 @@
   </main>
 </div>
 
-<button class="fab" id="openAdd"><span id="fabLabel">Nouvelle prise</span></button>
+<button class="fab" id="openAdd">🎣 <span id="fabLabel">Nouvelle prise</span></button>
 
 <!-- Menu options (hamburger) -->
 <div class="overlay" id="menuOverlay">
@@ -556,19 +565,8 @@
 
       <div class="row2">
         <div class="field">
-          <label>Poids (kg)</label>
-          <input id="poids" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-        <div class="field">
           <label>Taille (cm)</label>
           <input id="taille" type="number" step="0.5" min="0" placeholder="0">
-        </div>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>Technique / appât</label>
-          <input id="technique" type="text" placeholder="Ex : Leurre souple, vif…">
         </div>
         <div class="field">
           <label>Météo</label>
@@ -582,7 +580,14 @@
         </div>
       </div>
 
-  
+      <div class="field">
+        <label>Technique / appât</label>
+        <div class="technique-row">
+          <label class="tech-check"><input type="checkbox" id="techMouche"> Mouche</label>
+          <label class="tech-check"><input type="checkbox" id="techLeurre"> Leurre</label>
+          <input id="techniqueLibre" type="text" placeholder="Autre / précisions…">
+        </div>
+      </div>
 
       <div class="field photo-field">
         <label>Photo</label>
@@ -637,7 +642,7 @@
 
       <div class="check-field">
         <input type="checkbox" id="outingBredouille">
-        <label for="outingBredouille">Bredouille</label>
+        <label for="outingBredouille">Bredouille (aucun poisson)</label>
       </div>
 
       <div class="field">
@@ -664,7 +669,7 @@
 const CATCH_STORAGE_KEY = "carnet-peche-catches-v1";
 const OUTING_STORAGE_KEY = "carnet-peche-outings-v1";
 
-const QUICK_SPECIES = ["🐟 Chevesne","🐊 Brochet","🎣 Perche","🐠 Truie","🐟 Black-bass","🦈 Silure","🐡 Carpe"];
+const QUICK_SPECIES = ["🐟 Chevesne","🐊 Brochet","🐠 Perche","🐟 Truite","🐟 Black-bass","🐡 Carpe","🦈 Silure"];
 
 const SPECIES_LIST = [
   "Ablette","Anguille","Bar","Barbeau","Black-bass","Bonite","Bordelière","Brème","Brème bordelière",
@@ -771,7 +776,7 @@ function renderStats(){
     Object.entries(speciesCount).forEach(([k,v])=>{ if(v>favCount){favCount=v; favSpecies=k;} });
     el.innerHTML = `
       <div class="stat"><span class="num">${total}</span><span class="lbl">Prises</span></div>
-      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.taille).toFixed(2)+"cm" : "—"}</span><span class="lbl">Record</span></div>
+      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.taille)+"cm" : "—"}</span><span class="lbl">Record</span></div>
       <div class="stat"><span class="num" style="font-size:14px; text-transform:capitalize;">${favSpecies}</span><span class="lbl">Espèce fétiche</span></div>
     `;
   }else{
@@ -810,7 +815,7 @@ function renderCatchList(){
   });
 
   filtered.sort((a,b)=>{
-    if(sortMode === "poids") return (parseFloat(b.poids)||0) - (parseFloat(a.poids)||0);
+    if(sortMode === "taille") return (parseFloat(b.taille)||0) - (parseFloat(a.taille)||0);
     return (b.date+b.heure).localeCompare(a.date+a.heure);
   });
 
@@ -829,14 +834,13 @@ function renderCatchList(){
       <div class="catch-top">
         <div class="stamp">${c.photo ? `<img src="${c.photo}" alt="">` : speciesEmoji(c.espece)}</div>
         <div class="catch-info">
-          <p class="catch-species">${escapeHtml(c.espece)}${c.relache ? '<span class="released-badge">relâché</span>' : ''}</p>
+          <p class="catch-species">${escapeHtml(c.espece)}</p>
           <div class="catch-meta">
             <span>📅 ${fmtDate(c.date)}${c.heure ? " · "+c.heure : ""}</span>
             ${c.lieu ? `<span>📍 ${escapeHtml(c.lieu)}</span>` : ""}
             ${c.meteo ? `<span>${c.meteo}</span>` : ""}
           </div>
           <div class="catch-nums">
-            ${c.poids ? `<div><span class="n">${parseFloat(c.poids)} kg</span><span class="l">Poids</span></div>` : ""}
             ${c.taille ? `<div><span class="n">${parseFloat(c.taille)} cm</span><span class="l">Taille</span></div>` : ""}
             ${c.technique ? `<div><span class="n" style="font-size:12.5px; font-weight:500;">${escapeHtml(c.technique)}</span><span class="l">Technique</span></div>` : ""}
           </div>
@@ -884,8 +888,8 @@ function renderOutingList(){
         </div>
       </div>
       <div class="outing-stats-row">
-        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">Au bord de l'eau</span></div>` : ""}
-        <div><span class="n">${total}</span><span class="l"> Poissons au total</span></div>
+        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)} h</span><span class="l">Au bord de l'eau</span></div>` : ""}
+        <div><span class="n">${total}</span><span class="l">Poissons au total</span></div>
       </div>
       ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans Prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
       ${o.notes ? `<div class="catch-notes">${escapeHtml(o.notes)}</div>` : ""}
@@ -1066,11 +1070,11 @@ function editCatch(id){
   document.getElementById("date").value = c.date;
   document.getElementById("heure").value = c.heure||"";
   document.getElementById("lieu").value = c.lieu||"";
-  document.getElementById("poids").value = c.poids||"";
   document.getElementById("taille").value = c.taille||"";
-  document.getElementById("technique").value = c.technique||"";
   document.getElementById("meteo").value = c.meteo || "☀️ Soleil";
-  document.getElementById("relache").checked = !!c.relache;
+  document.getElementById("techMouche").checked = !!c.techMouche;
+  document.getElementById("techLeurre").checked = !!c.techLeurre;
+  document.getElementById("techniqueLibre").value = c.techniqueLibre||"";
   document.getElementById("notes").value = c.notes||"";
 
   resetPhoto();
@@ -1089,7 +1093,9 @@ function editCatch(id){
 
 document.getElementById("openAdd").addEventListener("click", ()=>{
   if(activeTab === "prises"){
-    document.getElementById("date").value = new Date().toISOString().slice(0,10);
+    const now = new Date();
+    document.getElementById("date").value = now.toISOString().slice(0,10);
+    document.getElementById("heure").value = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
     openSheet();
   }else{
     document.getElementById("outingDate").value = new Date().toISOString().slice(0,10);
@@ -1101,17 +1107,26 @@ document.getElementById("overlay").addEventListener("click", (e)=>{ if(e.target.
 
 document.getElementById("catchForm").addEventListener("submit", (e)=>{
   e.preventDefault();
+  const techMouche = document.getElementById("techMouche").checked;
+  const techLeurre = document.getElementById("techLeurre").checked;
+  const techniqueLibre = document.getElementById("techniqueLibre").value.trim();
+  const techniqueParts = [];
+  if(techMouche) techniqueParts.push("Mouche");
+  if(techLeurre) techniqueParts.push("Leurre");
+  if(techniqueLibre) techniqueParts.push(techniqueLibre);
+
   const data = {
     id: editingId || uid(),
     espece: document.getElementById("espece").value.trim(),
     date: document.getElementById("date").value,
     heure: document.getElementById("heure").value,
     lieu: document.getElementById("lieu").value.trim(),
-    poids: document.getElementById("poids").value,
     taille: document.getElementById("taille").value,
-    technique: document.getElementById("technique").value.trim(),
     meteo: document.getElementById("meteo").value,
-    relache: document.getElementById("relache").checked,
+    techMouche: techMouche,
+    techLeurre: techLeurre,
+    techniqueLibre: techniqueLibre,
+    technique: techniqueParts.join(" · "),
     notes: document.getElementById("notes").value.trim(),
     photo: currentPhotoData || null,
     lat: currentCoords ? currentCoords.lat : null,
@@ -1207,8 +1222,8 @@ document.getElementById("menuImport").addEventListener("click", ()=>{
 document.getElementById("search").addEventListener("input", renderCatchList);
 document.getElementById("filterEspece").addEventListener("change", renderCatchList);
 document.getElementById("sortBtn").addEventListener("click", ()=>{
-  sortMode = sortMode === "date" ? "poids" : "date";
-  document.getElementById("sortBtn").textContent = sortMode === "date" ? "⇅ Date" : "⇅ Poids";
+  sortMode = sortMode === "date" ? "taille" : "date";
+  document.getElementById("sortBtn").textContent = sortMode === "date" ? "⇅ Date" : "⇅ Taille";
   renderCatchList();
 });
 
