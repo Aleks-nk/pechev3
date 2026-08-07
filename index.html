@@ -476,10 +476,10 @@
 <div class="app">
   <header class="cover">
     <button class="hamburger-btn" id="menuBtn" aria-label="Options">☰</button>
-    <div class="cover-eyebrow"><span class="dot"></span> Journal personnel</div>
+    
     <h1 class="cover-title">Carnet de Pêche</h1>
     <div class="tabs">
-      <button class="tab-btn active" id="tabPrises" data-tab="prises">🎣 Prises</button>
+      <button class="tab-btn active" id="tabPrises" data-tab="prises">🎣 Fishdex</button>
       <button class="tab-btn" id="tabSorties" data-tab="sorties">🚣 Sorties</button>
     </div>
   </header>
@@ -667,7 +667,7 @@
 const CATCH_STORAGE_KEY = "carnet-peche-catches-v1";
 const OUTING_STORAGE_KEY = "carnet-peche-outings-v1";
 
-const QUICK_SPECIES = ["🐟 Truite","🐊 Brochet","🎣 Sandre","🐠 Perche","🐡 Carpe","🦈 Silure","🐟 Black-bass"];
+const QUICK_SPECIES = ["🐟 Chevesne","🐊 Brochet","🎣 Perche","🐠 Truite","🐟 Black-bass","🦈 Silure","🐡 Carpe"];
 
 const SPECIES_LIST = [
   "Ablette","Anguille","Bar","Barbeau","Black-bass","Bonite","Bordelière","Brème","Brème bordelière",
@@ -774,7 +774,7 @@ function renderStats(){
     Object.entries(speciesCount).forEach(([k,v])=>{ if(v>favCount){favCount=v; favSpecies=k;} });
     el.innerHTML = `
       <div class="stat"><span class="num">${total}</span><span class="lbl">Prises</span></div>
-      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.poids).toFixed(2)+"kg" : "—"}</span><span class="lbl">Record</span></div>
+      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.taille).toFixed(2)+"cm" : "—"}</span><span class="lbl">Record</span></div>
       <div class="stat"><span class="num" style="font-size:14px; text-transform:capitalize;">${favSpecies}</span><span class="lbl">Espèce fétiche</span></div>
     `;
   }else{
@@ -887,8 +887,8 @@ function renderOutingList(){
         </div>
       </div>
       <div class="outing-stats-row">
-        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)} h</span><span class="l">Au bord de l'eau</span></div>` : ""}
-        <div><span class="n">${total}</span><span class="l">Poissons au total</span></div>
+        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">Au bord de l'eau</span></div>` : ""}
+        <div><span class="n">${total}</span><span class="l"> Poissons au total</span></div>
       </div>
       ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans Prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
       ${o.notes ? `<div class="catch-notes">${escapeHtml(o.notes)}</div>` : ""}
