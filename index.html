@@ -1196,9 +1196,15 @@ async function shareBackup(){
   const payload = { catches: catches, outings: outings };
   const json = JSON.stringify(payload, null, 2);
   const stamp = new Date().toISOString().slice(0,10);
-  const file = new File([json], `carnet-peche-sauvegarde-${stamp}.json`, {type:"application/json"});
+  // "text/plain" est accepté de façon bien plus fiable par le partage Android que "application/json"
+  const file = new File([json], `carnet-peche-sauvegarde-${stamp}.json`, {type:"text/plain"});
 
-  if(navigator.canShare && navigator.canShare({files:[file]})){
+  let canShareFiles = false;
+  try{
+    canShareFiles = !!(navigator.canShare && navigator.canShare({files:[file]}));
+  }catch(e){ canShareFiles = false; }
+
+  if(navigator.share && canShareFiles){
     try{
       await navigator.share({
         files:[file],
@@ -1206,11 +1212,15 @@ async function shareBackup(){
         text:"Sauvegarde de mon carnet de pêche"
       });
     }catch(err){
-      // annulé par l'utilisateur ou refusé — rien à faire
+      if(err && err.name === "AbortError"){
+        return; // l'utilisateur a simplement fermé le menu de partage
+      }
+      exportData();
+      showToast("Partage refusé par le système — fichier téléchargé à la place");
     }
   }else{
     exportData();
-    showToast("Partage non pris en charge ici — fichier téléchargé à la place");
+    showToast("Partage de fichiers non pris en charge ici — fichier téléchargé à la place");
   }
 }
 
