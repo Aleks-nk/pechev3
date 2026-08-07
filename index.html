@@ -110,6 +110,9 @@
     gap:10px;
     padding:16px 16px 18px;
   }
+  .stats.four{
+    grid-template-columns:repeat(2,1fr);
+  }
   .stat{
     background:rgba(243,236,218,0.08);
     border:1px solid rgba(243,236,218,0.16);
@@ -281,7 +284,7 @@
     position:fixed;
     left:50%;
     transform:translateX(-50%);
-    bottom:20px;
+    bottom:calc(20px + env(safe-area-inset-bottom));
     background:var(--brass);
     color:var(--paper-soft);
     border:none;
@@ -447,6 +450,10 @@
   }
   .toast.show{opacity:1;}
 
+  #list{ animation: tabFade .22s ease; }
+  @keyframes tabFade{ from{opacity:0; transform:translateX(10px);} to{opacity:1; transform:translateX(0);} }
+  @media (prefers-reduced-motion: reduce){ #list{ animation:none; } }
+
   .lightbox{
     position:fixed; inset:0; background:rgba(10,16,15,0.9);
     display:none; align-items:center; justify-content:center;
@@ -494,7 +501,6 @@
   <div class="sheet">
     <h2>Options</h2>
     <div class="menu-options">
-      <button type="button" class="menu-option" id="menuShare"><span class="ic">📤</span> Partager la sauvegarde (Drive, Gmail…)</button>
       <button type="button" class="menu-option" id="menuExport"><span class="ic">⬇️</span> Exporter mes données</button>
       <button type="button" class="menu-option" id="menuImport"><span class="ic">⬆️</span> Importer des données</button>
     </div>
@@ -715,6 +721,7 @@ function fmtDate(iso){
 
 // ---------- Tabs ----------
 function switchTab(tab){
+  if(tab === activeTab) return;
   activeTab = tab;
   document.getElementById("tabPrises").classList.toggle("active", tab==="prises");
   document.getElementById("tabSorties").classList.toggle("active", tab==="sorties");
@@ -722,14 +729,36 @@ function switchTab(tab){
   document.getElementById("fabLabel").textContent = tab==="prises" ? "Nouvelle prise" : "Nouvelle sortie";
   document.getElementById("openAdd").firstChild.textContent = tab==="prises" ? "🎣 " : "🚣 ";
   renderAll();
+  const list = document.getElementById("list");
+  list.style.animation = "none";
+  requestAnimationFrame(()=>{ list.style.animation = "tabFade .22s ease"; });
 }
 document.getElementById("tabPrises").addEventListener("click", ()=>switchTab("prises"));
 document.getElementById("tabSorties").addEventListener("click", ()=>switchTab("sorties"));
+
+// ---------- Swipe entre onglets ----------
+let swipeStartX = null, swipeStartY = null;
+const swipeZone = document.querySelector("main");
+swipeZone.addEventListener("touchstart", (e)=>{
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+}, {passive:true});
+swipeZone.addEventListener("touchend", (e)=>{
+  if(swipeStartX === null) return;
+  const dx = e.changedTouches[0].clientX - swipeStartX;
+  const dy = e.changedTouches[0].clientY - swipeStartY;
+  if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5){
+    if(dx < 0 && activeTab === "prises") switchTab("sorties");
+    if(dx > 0 && activeTab === "sorties") switchTab("prises");
+  }
+  swipeStartX = null; swipeStartY = null;
+}, {passive:true});
 
 // ---------- Stats ----------
 function renderStats(){
   const el = document.getElementById("stats");
   if(activeTab === "prises"){
+    el.classList.remove("four");
     const total = catches.length;
     let biggest = null;
     const speciesCount = {};
@@ -746,12 +775,15 @@ function renderStats(){
       <div class="stat"><span class="num" style="font-size:14px; text-transform:capitalize;">${favSpecies}</span><span class="lbl">Espèce fétiche</span></div>
     `;
   }else{
+    el.classList.add("four");
     const totalOutings = outings.length;
     const totalHeures = outings.reduce((s,o)=> s + (parseFloat(o.heures)||0), 0);
     const bredouilleCount = outings.filter(o=>o.bredouille).length;
+    const totalPoissons = outings.reduce((s,o)=> s + catchesForDate(o.date) + (parseInt(o.libre)||0), 0);
     el.innerHTML = `
       <div class="stat"><span class="num">${totalOutings}</span><span class="lbl">Sorties</span></div>
       <div class="stat"><span class="num">${totalHeures.toFixed(1)}h</span><span class="lbl">Cumulées</span></div>
+      <div class="stat"><span class="num">${totalPoissons}</span><span class="lbl">Poissons total</span></div>
       <div class="stat"><span class="num">${bredouilleCount}</span><span class="lbl">Bredouilles</span></div>
     `;
   }
@@ -1162,10 +1194,6 @@ document.getElementById("menuClose").addEventListener("click", ()=>{
 document.getElementById("menuOverlay").addEventListener("click", (e)=>{
   if(e.target.id === "menuOverlay") document.getElementById("menuOverlay").classList.remove("open");
 });
-document.getElementById("menuShare").addEventListener("click", ()=>{
-  shareBackup();
-  document.getElementById("menuOverlay").classList.remove("open");
-});
 document.getElementById("menuExport").addEventListener("click", ()=>{
   exportData();
   document.getElementById("menuOverlay").classList.remove("open");
@@ -1189,39 +1217,6 @@ function showToast(msg){
   t.textContent = msg;
   t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"), 2200);
-}
-
-// ---------- Partage (menu de partage natif Android -> Drive, Gmail, etc.) ----------
-async function shareBackup(){
-  const payload = { catches: catches, outings: outings };
-  const json = JSON.stringify(payload, null, 2);
-  const stamp = new Date().toISOString().slice(0,10);
-  // "text/plain" est accepté de façon bien plus fiable par le partage Android que "application/json"
-  const file = new File([json], `carnet-peche-sauvegarde-${stamp}.json`, {type:"text/plain"});
-
-  let canShareFiles = false;
-  try{
-    canShareFiles = !!(navigator.canShare && navigator.canShare({files:[file]}));
-  }catch(e){ canShareFiles = false; }
-
-  if(navigator.share && canShareFiles){
-    try{
-      await navigator.share({
-        files:[file],
-        title:"Sauvegarde Carnet de Pêche",
-        text:"Sauvegarde de mon carnet de pêche"
-      });
-    }catch(err){
-      if(err && err.name === "AbortError"){
-        return; // l'utilisateur a simplement fermé le menu de partage
-      }
-      exportData();
-      showToast("Partage refusé par le système — fichier téléchargé à la place");
-    }
-  }else{
-    exportData();
-    showToast("Partage de fichiers non pris en charge ici — fichier téléchargé à la place");
-  }
 }
 
 // ---------- Export / Import (bundle Prises + Sorties) ----------
