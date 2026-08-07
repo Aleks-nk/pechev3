@@ -476,11 +476,11 @@
 <div class="app">
   <header class="cover">
     <button class="hamburger-btn" id="menuBtn" aria-label="Options">☰</button>
-    <div class="cover-eyebrow"><span class="dot"></span> Aleks_nk_fishing<span class="dot"></div>
+    <div class="cover-eyebrow"><span class="dot"></span> Journal personnel</div>
     <h1 class="cover-title">Carnet de Pêche</h1>
     <div class="tabs">
-      <button class="tab-btn active" id="tabPrises" data-tab="prises">Fishdex</button>
-      <button class="tab-btn" id="tabSorties" data-tab="sorties">Sorties</button>
+      <button class="tab-btn active" id="tabPrises" data-tab="prises">🎣 Prises</button>
+      <button class="tab-btn" id="tabSorties" data-tab="sorties">🚣 Sorties</button>
     </div>
   </header>
 
@@ -542,7 +542,7 @@
 
       <div class="field">
         <label>Lieu</label>
-        <input id="lieu" type="text" placeholder="Ex : Canal de l'Ourcq, Bep5">
+        <input id="lieu" type="text" placeholder="Ex : Lac de Vassivière, Seine…">
       </div>
 
       <div class="field">
@@ -553,7 +553,12 @@
         </div>
         <button type="button" class="gps-clear" id="gpsClear" style="display:none;">Effacer la position</button>
       </div>
-<div class="row2">  
+
+      <div class="row2">
+        <div class="field">
+          <label>Poids (kg)</label>
+          <input id="poids" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
         <div class="field">
           <label>Taille (cm)</label>
           <input id="taille" type="number" step="0.5" min="0" placeholder="0">
@@ -575,6 +580,11 @@
             <option value="🌫️ Brouillard">🌫️ Brouillard</option>
           </select>
         </div>
+      </div>
+
+      <div class="check-field">
+        <input type="checkbox" id="relache">
+        <label for="relache">Remis à l'eau (no-kill)</label>
       </div>
 
       <div class="field photo-field">
@@ -657,7 +667,7 @@
 const CATCH_STORAGE_KEY = "carnet-peche-catches-v1";
 const OUTING_STORAGE_KEY = "carnet-peche-outings-v1";
 
-const QUICK_SPECIES = ["🐟 Chevesne","🐊 Brochet","🎣 Perche","🐠 Truite","🐟 Black-bass","🦈 Silure","🐡 Carpe"];
+const QUICK_SPECIES = ["🐟 Truite","🐊 Brochet","🎣 Sandre","🐠 Perche","🐡 Carpe","🦈 Silure","🐟 Black-bass"];
 
 const SPECIES_LIST = [
   "Ablette","Anguille","Bar","Barbeau","Black-bass","Bonite","Bordelière","Brème","Brème bordelière",
@@ -756,7 +766,7 @@ function renderStats(){
     let biggest = null;
     const speciesCount = {};
     catches.forEach(c=>{
-      if(c.taille && (!biggest || parseFloat(c.taille) > parseFloat(biggest.taille))) biggest = c;
+      if(c.poids && (!biggest || parseFloat(c.poids) > parseFloat(biggest.poids))) biggest = c;
       const key = c.espece.trim().toLowerCase();
       speciesCount[key] = (speciesCount[key]||0)+1;
     });
@@ -764,7 +774,7 @@ function renderStats(){
     Object.entries(speciesCount).forEach(([k,v])=>{ if(v>favCount){favCount=v; favSpecies=k;} });
     el.innerHTML = `
       <div class="stat"><span class="num">${total}</span><span class="lbl">Prises</span></div>
-      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.taille).toFixed(2)+"cm" : "—"}</span><span class="lbl">Record</span></div>
+      <div class="stat"><span class="num">${biggest ? parseFloat(biggest.poids).toFixed(2)+"kg" : "—"}</span><span class="lbl">Record</span></div>
       <div class="stat"><span class="num" style="font-size:14px; text-transform:capitalize;">${favSpecies}</span><span class="lbl">Espèce fétiche</span></div>
     `;
   }else{
@@ -877,8 +887,8 @@ function renderOutingList(){
         </div>
       </div>
       <div class="outing-stats-row">
-        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)}h </span><span class="l">Au bord de l'eau</span></div>` : ""}
-        <div><span class="n">${total}</span><span class="l"> Poissons au total</span></div>
+        ${o.heures ? `<div><span class="n">${parseFloat(o.heures)} h</span><span class="l">Au bord de l'eau</span></div>` : ""}
+        <div><span class="n">${total}</span><span class="l">Poissons au total</span></div>
       </div>
       ${(enregistrees>0 || libre>0) ? `<p class="outing-breakdown">${enregistrees} enregistrée${enregistrees===1?"":"s"} dans Prises + ${libre} compté${libre===1?"":"s"} à part</p>` : ""}
       ${o.notes ? `<div class="catch-notes">${escapeHtml(o.notes)}</div>` : ""}
